@@ -7,6 +7,7 @@ namespace ReRouter
     using System;
     using System.Diagnostics;
     using System.Collections.Generic;
+    using System.IO;
 
     public class Program
     {
@@ -33,17 +34,19 @@ namespace ReRouter
             {
                 AddRoute(route, configSection.OverrideGatewayIp);
             }
+            Console.WriteLine("Finished...");
+            Console.ReadLine();
         }
 
         private static void DeleteConfiguredRoutesBeforeAdding(UrlRouteElementCollection routes)
         {
             foreach(UrlRouteElement route in routes)
             {
-                DeleteRount(route);
+                DeleteRoute(route);
             }
         }
 
-        private static void DeleteRount(UrlRouteElement route)
+        private static void DeleteRoute(UrlRouteElement route)
         {
             string ipAddress = route.IpAddress;
 
@@ -51,13 +54,9 @@ namespace ReRouter
             {
                 ipAddress = FindIpAddress(route.Url);
             }
-
-            var proc = new Process();
-            proc.StartInfo.FileName = "route";
-            proc.StartInfo.Arguments = string.Format("delete {0}", ipAddress);
-            proc.Start();
+            Console.WriteLine("Deleting route: " + ipAddress);
+            RunRouteProc(string.Format("delete {0}", ipAddress));
         }
-
 
         private static void AddRoute(UrlRouteElement route, string gateway)
         {
@@ -68,10 +67,8 @@ namespace ReRouter
                 ipAddress = FindIpAddress(route.Url);
             }
 
-            var proc = new Process();
-            proc.StartInfo.FileName = "route";
-            proc.StartInfo.Arguments = string.Format("add {0} mask 255.255.255.255 {1} metric 1", ipAddress, gateway);
-            proc.Start();
+            Console.WriteLine("Adding route for: " + route.Url);
+            RunRouteProc(string.Format("add {0} mask 255.255.255.255 {1} metric 1", ipAddress, gateway));
         }
 
         private static string FindIpAddress(string routeUrl)
@@ -88,6 +85,25 @@ namespace ReRouter
             }
 
             return IpA[0].ToString();
+        }
+
+        private static void RunRouteProc(string args)
+        {
+            var proc = new Process();
+            var si = new ProcessStartInfo("route");
+            si.RedirectStandardOutput = true;
+            si.RedirectStandardError = true;
+            si.Arguments = args;
+            si.UseShellExecute = false;
+            si.CreateNoWindow = true;
+            proc.StartInfo = si;
+            proc.Start();
+
+            StreamReader sr = proc.StandardOutput;
+            StreamReader err = proc.StandardError;
+
+            Console.WriteLine(sr.ReadToEnd());
+            Console.Write(err.ReadToEnd());
         }
     }
 }
