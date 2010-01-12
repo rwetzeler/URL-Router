@@ -3,3 +3,4 @@ obj
 bin
 *.user
 *ReSharpeer*
+*_ReSharper.*
