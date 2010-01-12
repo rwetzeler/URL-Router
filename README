@@ -1,2 +1,2 @@
 This program is designed to modify the Windows route table based on the domains specified.  It will
-look up the IP address of the domain(s) and add those to the route table to use the specified device.
+look up the IP address of the domain(s) and add those to the route table to use the specified gateway. All this is done via app.config possibly moving the config to it's own file
