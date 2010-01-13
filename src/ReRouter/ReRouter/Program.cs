@@ -22,11 +22,14 @@ namespace ReRouter
 
             if (listArgs.Contains("cleanFirst") || listArgs.Contains("cleanOnly"))
             {
+                Console.WriteLine("Clean routes");
                 DeleteConfiguredRoutesBeforeAdding(configSection.Routes);
             }
 
             if (listArgs.Contains("cleanOnly"))
             {
+                Console.WriteLine("Finished cleaning up only...");
+                Console.ReadLine();
                 return;
             }
 
