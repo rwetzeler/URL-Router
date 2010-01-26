@@ -13,11 +13,25 @@ namespace ReRouter.Config
             set { this["url"] = value; }
         }
 
+        private string _ipAddress;
+
         [ConfigurationProperty("ipAddress")]
         //[StringValidator()] // todo.. add regex for IP address validation
         public string IpAddress
         {
-            get { return (string)this["ipAddress"]; }
+            get
+            {
+                if(string.IsNullOrEmpty(this["ipAddress"] as string))
+                {
+                    if (string.IsNullOrEmpty(_ipAddress))
+                    {
+                        _ipAddress = Utility.FindIpAddress(Url);
+                    }
+                    return _ipAddress;
+                }
+
+                return (string)this["ipAddress"];
+            }
             set { this["ipAddress"] = value; }
         }
     }
