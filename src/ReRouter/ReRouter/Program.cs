@@ -1,27 +1,26 @@
 ﻿namespace ReRouter
 {
     using System.Configuration;
+    using System.Net.NetworkInformation;
     using Config;
     using System;
     using System.Diagnostics;
     using System.Collections.Generic;
     using System.Net;
+    using System.Text.RegularExpressions;
 
     public class Program
     {
         static void Main(string[] args)
         {
             var listArgs = new List<string>(args);
-            var configSection = (UrlRouteConfigSection)ConfigurationManager.GetSection(
-                ConfigurationManager.AppSettings["ReRouterConfigSection"]);
-
-            if (configSection == null)
+            if (ConfigSection == null)
                 throw new NullReferenceException("Could not find configSection by the name: " + ConfigurationManager.AppSettings["ReRouterConfigSection"]);
 
             if (listArgs.Contains("cleanFirst") || listArgs.Contains("cleanOnly"))
             {
                 Console.WriteLine("Clean routes");
-                DeleteConfiguredRoutesBeforeAdding(configSection.Routes);
+                DeleteConfiguredRoutesBeforeAdding(ConfigSection.Routes);
             }
 
             if (listArgs.Contains("cleanOnly"))
@@ -31,9 +30,9 @@
                 return;
             }
 
-            foreach (UrlRouteElement route in configSection.Routes)
+            foreach (UrlRouteElement route in ConfigSection.Routes)
             {
-                AddRoute(route, configSection.OverrideGatewayIp);
+                AddRoute(route, GatewayAddress);
             }
             Console.WriteLine("Finished...");
             Console.ReadLine();
@@ -41,7 +40,7 @@
 
         private static void DeleteConfiguredRoutesBeforeAdding(UrlRouteElementCollection routes)
         {
-            foreach(UrlRouteElement route in routes)
+            foreach (UrlRouteElement route in routes)
             {
                 DeleteRoute(route);
             }
@@ -78,6 +77,60 @@
 
             Console.WriteLine(sr.ReadToEnd());
             Console.Write(err.ReadToEnd());
+        }
+
+
+        private static UrlRouteConfigSection ConfigSection
+        {
+            get
+            {
+                return (UrlRouteConfigSection)ConfigurationManager.GetSection(
+                ConfigurationManager.AppSettings["ReRouterConfigSection"]);
+            }
+        }
+
+        private static string _gatewayAddress;
+        private static string GatewayAddress
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_gatewayAddress))
+                {
+                    string gatewayConfigPattern = ConfigSection.OverrideGatewayIp;
+
+                    bool foundIp = false;
+                    NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+                    for (int i = 0; !foundIp && i < adapters.Length; i++)
+                    {
+                        var adapter = adapters[i];
+                        IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+                        GatewayIPAddressInformationCollection addresses = adapterProperties.GatewayAddresses;
+                        if (addresses.Count > 0)
+                        {
+                            foreach (GatewayIPAddressInformation address in addresses)
+                            {
+                                Match match = Regex.Match(address.Address.ToString(), gatewayConfigPattern);
+
+                                if (!match.Success)
+                                {
+                                    continue;
+                                }
+
+                                _gatewayAddress = address.Address.ToString();
+                                foundIp = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(_gatewayAddress))
+                    {
+                        throw new Exception("No gatway could be found with the pattern: " + gatewayConfigPattern);
+                    }
+                }
+                return _gatewayAddress;
+            }
+
         }
     }
 }
