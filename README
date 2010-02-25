@@ -1,10 +1,9 @@
 Please choose the appropriate branch... nothing will be on Master branch
 
-This program is designed to modify the Windows route table based on the domains specified.  It will
-look up the IP address of the domain(s) and add those to the route table to use the specified gateway. All this 
-is done via app.config possibly moving the config to it's own file.
+This program is designed to modify the Windows route table based on the domains specified.  A good usage of this software would be in you are on a network that happens to block access to a website but you can use your WiFi to browse that website but you still want to be on you LAN to access other things.  This software will simply force any traffic to the domains specified in the configuration our your WiFi (or whatever you specify in config) instead of going through your LAN. It will look up the IP address of the domain(s) and add the IP to the route table to use the specified gateway. All this 
+is done via app.config possibly moving the config to it's own file or Windows user settings (e.g. registry)
 
-You can pass the arguments: cleanFirst and cleanOnly. 
+You can pass the arguments to the exe: cleanFirst and cleanOnly. 
 
 cleanFirst will try to delete all route entries defined in the config file first before re-adding them.
 This is useful when you edit your config file after adding a new url and want to then run the program.
